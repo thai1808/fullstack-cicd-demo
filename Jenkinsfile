@@ -5,7 +5,6 @@ pipeline {
         DOCKERHUB_USER = "thai1808"
         IMAGE_TAG      = "${env.BUILD_NUMBER}"
         DOCKERHUB_CREDENTIALS = credentials('dockerhub-creds')
-        #DEPLOY_DIR     = "/root/lab-cicd"
     }
 
     stages {
