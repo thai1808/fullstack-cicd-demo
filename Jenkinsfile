@@ -5,7 +5,7 @@ pipeline {
         DOCKERHUB_USER = "thai1808"
         IMAGE_TAG      = "${env.BUILD_NUMBER}"
         DOCKERHUB_CREDENTIALS = credentials('dockerhub-creds')
-        DEPLOY_DIR     = "/root/lab-cicd"
+        #DEPLOY_DIR     = "/root/lab-cicd"
     }
 
     stages {
@@ -46,18 +46,22 @@ pipeline {
             }
         }
 
-        stage('Deploy') {
-            steps {
-                sh '''
-                    cp docker-compose.prod.yml $DEPLOY_DIR/docker-compose.prod.yml
-                    cd $DEPLOY_DIR
-                    export IMAGE_TAG=$IMAGE_TAG
-                    docker compose --env-file .env -f docker-compose.prod.yml pull
-                    docker compose --env-file .env -f docker-compose.prod.yml up -d
-                    docker image prune -f
-                '''
-            }
-        }
+stage('Deploy') {
+    steps {
+        sh '''
+            docker run --rm \
+                -v /var/run/docker.sock:/var/run/docker.sock \
+                -v $WORKSPACE/docker-compose.prod.yml:/deploy/docker-compose.prod.yml \
+                -v /root/lab-cicd/.env:/deploy/.env \
+                -w /deploy \
+                -e IMAGE_TAG=$IMAGE_TAG \
+                -e DOCKERHUB_USER=$DOCKERHUB_USER \
+                docker:27-cli \
+                sh -c "docker compose --env-file .env -f docker-compose.prod.yml pull && docker compose --env-file .env -f docker-compose.prod.yml up -d"
+            docker image prune -f
+        '''
+    }
+}
     }
 
     post {
